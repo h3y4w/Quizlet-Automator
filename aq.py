@@ -11,47 +11,39 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.common.exceptions import TimeoutException
 from selenium.common.exceptions import NoSuchElementException
 
-
 class AutoApp (object):
-	email = None
-	password = None	
 	answer_dict = {}
 	assignment_number = None
-	user = None
 	driver = None
+
 	def __init__ (self):
 		self.driver = webdriver.Firefox()
-		self.user = 'deno'
 		self.setup()
 		self.scrap_site()
 		self.selector()
 
 	def setup (self):
-		driver = self.driver		
-		with open('accounts/' + self.user + '/quizlet') as f: #Gets user's email and password from their file
-			temp_userInfo = f.readlines()
-			temp_userInfo = unicode(''.join(temp_userInfo), 'utf-8') #turns it into utf
-			index = temp_userInfo.find(':')
-			self.email = temp_userInfo[:index]
-			self.password = temp_userInfo[index+1:]		
-			print temp_userInfo[index+1:]
 
-		with open('loginLink.txt') as f:
-			temp_loginLink = f.readlines()
-		loginLink = unicode(''.join(temp_loginLink), 'utf-8')
-		driver.get(loginLink)
-	
-		email = driver.find_element_by_name('Email')
-		email.click()
-		email.send_keys(self.email)
-		driver.find_element_by_name('signIn').click()
-		
-		driver.implicitly_wait(5)
+		driver = self.driver
+		driver.get('http://www.quizlet.com')
+		driver.find_element_by_css_selector('div[class^="login poppable clickable"]').click()
+		driver.implicitly_wait(3)
 
-		password = driver.find_element_by_name('Passwd')
-		password.click()
-		password.send_keys(self.password)
+		username = 'hmeteke'
+		password = 'Inturn77!'
+			
+		user = driver.find_element_by_name('username')
+		user.click()
+		user.clear()
+		user.send_keys(username)
 		
+		passwd = driver.find_element_by_name('password')
+		passwd.click()
+		passwd.clear()
+		passwd.send_keys(password)
+		
+		driver.find_element_by_css_selector('[class^="submit button"]').click()
+
 		self.assignment_number = raw_input('>')
 		
 	def scrap_site(self):
@@ -105,19 +97,25 @@ class AutoApp (object):
 
 			except TimeoutException:
 				driver.get(learner_url)
-			
+			except KeyError:
+				continue	
 			except NoSuchElementException:
 				try:
 	
 					remainder = driver.find_element_by_css_selector("*[class^='LearnModeSidebar-counterNumber']").text
-					if 'Correct' == driver.find_element_by_css_selector("*[class^='LearnModeTitle LearnModeTitle--correct']").text:
-						driver.get(learner_url)
-						print remainder + ' more questions'
 
-					elif 'Incorrect' == driver.find_element_by_css_selector("*[class^='LearnModeTitle LearnModeTitle--incorrect']").text:
-						driver.find_element_by_css_selector("*[class^='LearnModeGradeAnswerView-overrideButton']").click()
+					try:
+						if 'Correct' == driver.find_element_by_css_selector("*[class^='LearnModeTitle LearnModeTitle--correct']").text:
 
-					elif int(remainder) == 0:
+							driver.find_element_by_xpath('//body').send_keys(Keys.RETURN)
+							print remainder + ' more questions'
+
+					except NoSuchElementException:
+						if 'Incorrect' == driver.find_element_by_css_selector("*[class^='LearnModeTitle LearnModeTitle--incorrect']").text:
+							print 'overrode'
+							driver.find_element_by_css_selector("*[class^='LearnModeGradeAnswerView-overrideButton']").click()
+
+					if int(remainder) == 0:
 						print 'Finished!'
 						break
 				except NoSuchElementException:
@@ -141,6 +139,7 @@ class AutoApp (object):
                 alert = driver.switch_to_alert()
                 alert.accept()
 		driver.implicitly_wait(3)
+		counter = 0
 		while True:
 			try:
 				driver.implicitly_wait(3)
@@ -151,7 +150,7 @@ class AutoApp (object):
 				inputA.send_keys(answer_dict[question])
                 		inputA.send_keys(Keys.RETURN)
 				driver.get(speller_url)
-				completed = driver.find_element_by_id('prograssbar-sm').text
+				completed = driver.find_element_by_id('overall-percent').text
 				print completed + '% completed'	
 			
 			except TimeoutException:
@@ -159,17 +158,19 @@ class AutoApp (object):
 				continue
 
 			except NoSuchElementException:
-				
+				counter += 1
 				if driver.find_element_by_id('game-over').text == "Congratulations, you're done!":
 					print 'FINISHED'
 					break
+				elif counter == 3:
+					driver.get(speller_url)
 				else:
 					print 'Reloading'	
 					continue
 	
 	def selector (self):
-		choice = 1
 		while True:
+			choice = int(raw_input('1) Learner\n2) Speller\n>'))
 			if choice == 1:
 				self.do_learner()
 			if choice == 2:
