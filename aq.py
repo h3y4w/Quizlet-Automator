@@ -12,6 +12,7 @@ from selenium.common.exceptions import TimeoutException
 from selenium.common.exceptions import NoSuchElementException
 
 class AutoApp (object):
+	url = 'http://www.quizlet.com/'
 	answer_dict = {}
 	assignment_number = None
 	driver = None
@@ -25,7 +26,7 @@ class AutoApp (object):
 	def setup (self):
 
 		driver = self.driver
-		driver.get('http://www.quizlet.com')
+		driver.get(self.url)
 		driver.find_element_by_css_selector('div[class^="login poppable clickable"]').click()
 		driver.implicitly_wait(3)
 
@@ -49,8 +50,7 @@ class AutoApp (object):
 	def scrap_site(self):
 		driver = self.driver
 		answer_dict = {}
-		url = 'https://quizlet.com'
-		driver.get(url + '/' + self.assignment_number)
+		driver.get(self.url + self.assignment_number)
 		driver.get(driver.current_url + 'alphabetical')
 
 		source = (driver.page_source)
@@ -79,7 +79,7 @@ class AutoApp (object):
 
 	def do_learner (self):
 		driver = self.driver
-		learner_url = 'https://quizlet.com/' + self.assignment_number + '/learn'
+		learner_url = self.url + self.assignment_number + '/learn'
 		driver.get(learner_url)		
 		answer_dict = self.answer_dict	
 		counter = 0
@@ -131,7 +131,7 @@ class AutoApp (object):
 		driver = self.driver
 		answer_dict = self.answer_dict
 
-		speller_url = "https://quizlet.com/" + self.assignment_number + '/speller'
+		speller_url = self.url + self.assignment_number + '/speller'
 		driver.get(speller_url)
 		
 		select_speed = Select(driver.find_element_by_id('speller-prompt'))
