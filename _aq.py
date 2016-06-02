@@ -13,26 +13,25 @@ from selenium.common.exceptions import NoSuchElementException
 class AutoApp (object):
 	url = 'http://www.quizlet.com/'
 	answer_dict = {}
-	driver = None
 	assignment_number = None
-	user_info = {}
-	def __init__ (self, user_info):
-		self.user_info = user_info
+	driver = None
+
+	def __init__ (self):
 		self.driver = webdriver.Firefox() #For testing
 		#self.driver = webdriver.PhantomJS()
-		#self.login()
-		#self.scrap_site()
-		#self.selector()
+		self.setup()
+		self.scrap_site()
+		self.selector()
 
-	def login (self):
+	def setup (self):
 
 		driver = self.driver
 		driver.get(self.url)
 		driver.find_element_by_css_selector('div[class^="login poppable clickable"]').click()
 		driver.implicitly_wait(3)
 
-		username = self.user_info[0]
-		password = self.user_info[1]
+		username = 'hmeteke'
+		password = 'Inturn77!'
 			
 		user = driver.find_element_by_name('username')
 		user.click()
@@ -46,13 +45,7 @@ class AutoApp (object):
 		
 		driver.find_element_by_css_selector('[class^="submit button"]').click()
 
-		try: 
-			driver.find_element_by_css_selector('section[class^="LoginPage-content"]')
-			driver.quit()
-
-		except NoSuchElementException:
-			return True
-
+		self.assignment_number = raw_input('>')
 		
 	def scrap_site(self):
 		driver = self.driver
@@ -204,4 +197,6 @@ class AutoApp (object):
 				self.driver.quit()
 				break
 			else:
-				print "ERROR WRING CHOICE"
+				print 'ERROR WRONG CHOICE'
+
+start = AutoApp()
